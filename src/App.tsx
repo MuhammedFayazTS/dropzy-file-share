@@ -1,13 +1,23 @@
-import { Button } from "@/components/ui/button"
+import { useSocket } from "./hooks/useSocket";
+import { Route, Routes } from "react-router";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import Content from "./Content";
+import Home from "./pages/Home";
 
 function App() {
+  useSocket();
 
   return (
-    <div className='w-full h-screen bg-neutral-950 text-white flex justify-center items-center'>
-      <h1 className=''>TODO: setup client
-        <Button variant={"default"} > test</Button>
-      </h1>
-    </div>
+    <main className="w-full h-screen">
+      <Header />
+      <Routes>
+        <Route path="/" element={<Content />} >
+          <Route path="/" element={<Home />} />
+        </Route>
+      </Routes>
+      <Footer />
+    </main>
   )
 }
 export default App
