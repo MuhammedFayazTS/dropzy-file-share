@@ -13,6 +13,6 @@ createRoot(document.getElementById('root')!).render(
         <App />
       </ThemeProvider>
     </BrowserRouter>
-    <Toaster />
+    <Toaster expand={true} visibleToasts={5} />
   </StrictMode>,
 )

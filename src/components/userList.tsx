@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 import { useSocketStore } from "@/store/useSocketStore";
 import clsx from "clsx";
-import { User } from "../../@types/types";
+import { OpenJoinRoomAlert, User } from "../../@types/types";
 import { getPlatformLogo } from "@/lib/utils";
+import { ConfirmJoinRoom } from "./ConfirmJoinRoom";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
 export default function UserList() {
+    const navigate = useNavigate()
     const { socket } = useSocketStore();
     const [users, setUsers] = useState<User[]>([]);
     const [isSameNetwork, setIsSameNetwork] = useState(true)
+    const [openJoinRoomAlert, setOpenJoinRoomAlert] = useState<OpenJoinRoomAlert>({
+        open: false,
+        onConfirm: () => { }
+    });
 
     const handleShowSameNetworkMembers = () => {
         setIsSameNetwork(prev => !prev)
@@ -20,11 +29,60 @@ export default function UserList() {
             setUsers(withoutCurrentUser)
         }
 
+        const handlePrivateRoomConfirmation = (roomId: string, requestUser: User) => {
+            if (!socket) return
+            setOpenJoinRoomAlert({
+                open: true,
+                requestUser,
+                onConfirm: () => {
+                    socket.emit("accept request", requestUser.id, roomId)
+                    navigate("/private/" + roomId + "/receiver")
+                }
+            })
+        };
+
+        const handleAcceptRoomRequest = (roomId: string) => {
+            toast(`Joining room : ${roomId}`, {
+                duration: 500,
+                closeButton: true,
+            })
+            navigate("/private/" + roomId + "/sender")
+        }
+
+        const handleErrorEvents = (message: string, description?: string) => {
+            toast.error(message || "Error in connection!!", {
+                description,
+                closeButton: true,
+                style: {
+                    background: 'red',
+                },
+            });
+        }
+
         socket?.on("user joined", (value) => handleJoinedUsers(value))
+
+        socket?.on("error", (message, description) => handleErrorEvents(message, description))
+
+        socket?.on("user accepted request", (roomId) => handleAcceptRoomRequest(roomId))
+
+        socket?.on("request to join room", (roomId, requestUserId) => handlePrivateRoomConfirmation(roomId, requestUserId))
+
         return () => {
             socket?.off("user")
         }
     }, [socket])
+
+    const handleJoinRoom = (receiverId: string) => {
+        if (!socket?.id) return
+        const sender = socket.id
+        const roomId = `room-${sender}-${receiverId}`
+        socket.emit('request join room', roomId, receiverId)
+        toast(`Wait for the receiver to accept room request`, {
+            duration: 2000,
+            icon: <Loader className="animate-spin mr-2 w-4 h-4" />,
+            closeButton: true,
+        })
+    }
 
     return (
         <div className="w-full h-full flex flex-col justify-center items-center relative">
@@ -33,6 +91,7 @@ export default function UserList() {
                     <button
                         key={user.id}
                         style={user.position}
+                        onClick={() => handleJoinRoom(user.id)}
                         className="absolute z-10 text-gray-900 dark:text-white flex flex-col items-center justify-center"
                     >
                         <div
@@ -67,6 +126,8 @@ export default function UserList() {
                     "[mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_80%,transparent_100%)]"
                 )}
             />
+
+            <ConfirmJoinRoom openJoinRoomAlert={openJoinRoomAlert} onClose={() => setOpenJoinRoomAlert({ open: false })} />
         </div>
     );
 }

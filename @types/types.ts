@@ -1,5 +1,5 @@
 export interface User {
-  id?: string;
+  id: string;
   userAgent: string;
   fullName: string;
   image: string;
@@ -9,3 +9,9 @@ export interface User {
     left:string;
   }
 };
+
+export interface OpenJoinRoomAlert {
+  open: boolean;
+  requestUser?:User;
+  onConfirm?: () => void;
+}
