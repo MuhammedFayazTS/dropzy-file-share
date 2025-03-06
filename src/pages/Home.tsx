@@ -4,7 +4,6 @@ import UserList from '@/components/userList';
 
 const Home = () => {
     const { socket, pubIp } = useSocketStore()
-    console.log({ pubIp })
     useEffect(() => {
         if (!socket || !pubIp) return;
         socket?.emit("join room", pubIp);

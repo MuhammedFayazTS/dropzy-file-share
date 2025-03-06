@@ -68,9 +68,13 @@ export default function UserList() {
         socket?.on("request to join room", (roomId, requestUserId) => handlePrivateRoomConfirmation(roomId, requestUserId))
 
         return () => {
-            socket?.off("user")
+            if(!socket) return
+            socket.off("user joined", handleJoinedUsers);
+            socket.off("error", handleErrorEvents);
+            socket.off("user accepted request", handleAcceptRoomRequest);
+            socket.off("request to join room", handlePrivateRoomConfirmation);
         }
-    }, [socket])
+    }, [navigate, socket])
 
     const handleJoinRoom = (receiverId: string) => {
         if (!socket?.id) return

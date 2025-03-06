@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Content from "./Content";
 import Home from "./pages/Home";
+import PrivateRoom from "./pages/PrivateRoom";
 
 function App() {
   useSocket();
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Content />} >
           <Route path="/" element={<Home />} />
+          <Route path="/private/:roomId/:mode" element={<PrivateRoom />} />
         </Route>
       </Routes>
       <Footer />
