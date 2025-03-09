@@ -24,7 +24,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ multiple = false, accept = 
     return (
         <div
             {...getRootProps()}
-            className="h-3/6 md:h-full md:col-span-6 flex justify-center items-center border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-500 transition"
+            className=" w-full h-full md:col-span-6 flex justify-center items-center border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-500 transition"
         >
             <input {...getInputProps()} />
             {isDragActive ? (

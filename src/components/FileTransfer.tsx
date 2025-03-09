@@ -1,28 +1,18 @@
 import { useState } from "react";
-import { useSocketStore } from "@/store/useSocketStore";
-import FileUploader from "./FileUpload";
-import FileList from "./FileList";
+import FileSender from "./FileSender";
 import { Loader } from "lucide-react";
-import clsx from "clsx";
+import { User } from "../../@types/types";
+import FileReceiver from "./FileReceiver";
 
 interface FileTransferProps {
     isSender: boolean;
     roomId: string;
     multiple?: boolean;
+    users?: User[]
 }
 
-export default function FileTransfer({ multiple = false, isSender, roomId }: FileTransferProps) {
-    const [files, setFiles] = useState<File[]>([]);
+export default function FileTransfer({ multiple = false, isSender, roomId, users }: FileTransferProps) {
     const [connected, setConnected] = useState(true);
-    const { socket } = useSocketStore()
-
-    const removeFile = () => {
-        setFiles([]);
-    };
-
-    const removeSingleFile = (file: File) => {
-        setFiles(files.filter(f => f.name !== file.name));
-    };
 
     return !connected ? (
         <div className="w-full h-full flex justify-center items-center">
@@ -30,19 +20,22 @@ export default function FileTransfer({ multiple = false, isSender, roomId }: Fil
             Connecting peers...
         </div>
     ) : (
-        <div className={clsx("w-full h-full",
-            isSender && "grid grid-flow-row md:grid-flow-col md:grid-cols-12 space-x-4"
-        )}>
-            {isSender && <FileUploader files={files} setFiles={setFiles} />}
-            < FileList
+        <div className="w-full h-full">
+
+            {isSender && < FileSender
                 isSender={isSender}
-                files={files}
                 multiple={multiple}
-                removeFile={removeFile}
-                removeSingleFile={removeSingleFile}
-                onSendFile={() => console.log()
-                }
-            />
+                users={users}
+                roomId={roomId}
+                setConnected={setConnected}
+            />}
+
+            {!isSender && (
+                <FileReceiver
+                    roomId={roomId}
+                    setConnected={setConnected}
+                />
+            )}
         </div >
     )
 }

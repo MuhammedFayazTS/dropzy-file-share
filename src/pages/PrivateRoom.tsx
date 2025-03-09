@@ -47,7 +47,7 @@ const PrivateRoom = () => {
         <main className="w-full h-[calc(100vh-136px)] flex justify-center">
             <div className="w-11/12 h-full flex flex-col">
                 <div className="w-full flex-1 my-3">
-                    <FileTransfer isSender={mode === "sender"} roomId={roomId} />
+                    <FileTransfer isSender={mode === "sender"} roomId={roomId} users={users} />
                 </div>
                 <RoomUsers roomId={roomId} type={mode} users={users} />
             </div>
