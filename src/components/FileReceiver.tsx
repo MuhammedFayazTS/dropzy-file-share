@@ -179,7 +179,6 @@ const FileReceiver: FC<FileReceiverProps> = ({ roomId, setConnected }) => {
                 ))}
             </ul>
 
-            {/* File Preview Section */}
             <div className="w-1/2 h-full border border-dashed border-neutral-600 p-5 flex flex-col items-center justify-center">
                 {previewFile ? <FilePreview file={previewFile} /> : <span className="text-gray-500">Select a file to preview</span>}
                 {previewFile && (

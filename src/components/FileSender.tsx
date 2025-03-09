@@ -6,6 +6,7 @@ import { useSocketStore } from '@/store/useSocketStore';
 import { User } from '../../@types/types';
 import { default as Peer } from "simple-peer";
 import FileUploader from './FileUpload';
+import FileSendHistory from './FileSendHistory';
 
 interface FileSenderProps {
     isSender: boolean;
@@ -18,6 +19,7 @@ interface FileSenderProps {
 const FileSender: FC<FileSenderProps> = ({ isSender, multiple, users, roomId, setConnected }) => {
     const peerRef = useRef<Peer.Instance | null>(null);
     const [files, setFiles] = useState<File[]>([]);
+    const [sendHistory, setSendHistory] = useState<{ file: File; progress: number }[]>([]);
     const { socket } = useSocketStore()
 
     const removeFile = () => {
@@ -28,7 +30,6 @@ const FileSender: FC<FileSenderProps> = ({ isSender, multiple, users, roomId, se
         setFiles(files.filter(f => f.name !== file.name));
     };
 
-    // Sender
     useEffect(() => {
         if (!socket || peerRef.current || !users || users.length < 2) return;
 
@@ -79,7 +80,6 @@ const FileSender: FC<FileSenderProps> = ({ isSender, multiple, users, roomId, se
         };
     }, [roomId, setConnected, socket, users]);
 
-    // send file
     const handleSendFiles = async (file: File) => {
         if (!peerRef.current || !peerRef.current.connected) {
             console.error("Peer not connected");
@@ -90,7 +90,9 @@ const FileSender: FC<FileSenderProps> = ({ isSender, multiple, users, roomId, se
         const buffer = await file.arrayBuffer();
         const totalChunks = Math.ceil(buffer.byteLength / chunkSize);
 
-        // **Send metadata as a string**
+        // Add to history with 0% progress
+        setSendHistory(prev => [...prev, { file, progress: 0 }]);
+
         const metadata = JSON.stringify({
             type: "metadata",
             fileName: file.name,
@@ -98,22 +100,33 @@ const FileSender: FC<FileSenderProps> = ({ isSender, multiple, users, roomId, se
             totalChunks: totalChunks,
         });
 
-        peerRef.current.send(metadata); // String data is automatically encoded as text
+        peerRef.current.send(metadata);
 
-        // **Send file chunks**
         for (let i = 0; i < totalChunks; i++) {
             const chunk = buffer.slice(i * chunkSize, (i + 1) * chunkSize);
             peerRef.current.send(chunk);
+
+            // Update progress
+            setSendHistory(prev =>
+                prev.map(h => h.file.name === file.name ? { ...h, progress: Math.round(((i + 1) / totalChunks) * 100) } : h)
+            );
         }
 
-        // **Send end signal as a string**
         peerRef.current.send(JSON.stringify({ type: "done" }));
     };
+
+    const removeHistory = (file: File) => {
+        setSendHistory(prev => prev.filter(h => h.file.name !== file.name));
+    };
+
 
     return (
         <div className={"w-full h-full grid grid-flow-row md:grid-flow-col md:grid-cols-12 gap-y-4 md:gap-y-0 md:space-x-4"
         }>
-            <FileUploader files={files} setFiles={setFiles} />
+            <div className='md:col-span-6 md:h-full flex flex-col gap-y-2'>
+                <FileUploader files={files} setFiles={setFiles} />
+                {sendHistory?.length > 0 && <FileSendHistory history={sendHistory} removeHistory={removeHistory} />}
+            </div>
             {
                 files && files.length > 0 ? (
                     <div className="space-y-2 md:col-span-6 md:h-full flex flex-col justify-center items-center  border rounded-lg ">
